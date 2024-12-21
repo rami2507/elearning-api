@@ -31,7 +31,9 @@ exports.signup = asyncHandler(async (req, res, next) => {
   const otp = newUser.generateOtp();
   await newUser.save();
 
-  await sendEmail(newUser.email, "Your OTP", `Your OTP is ${otp}`);
+  sendEmail(email, "Your OTP", `Your OTP is ${otp}`)
+    .then(() => console.log("Email sent successfully"))
+    .catch((err) => console.error("Failed to send email", err));
 
   res.status(200).json({ message: "OTP sent to your email" });
 });
