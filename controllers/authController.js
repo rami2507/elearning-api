@@ -6,7 +6,7 @@ const { promisify } = require("util");
 // const sendEmail = require("../utils/emailService");
 const { Resend } = require("resend");
 
-const resend = new Resend("re_UwKwKuEF_QG8ZEpqnFGaNSgi7gtPG6uEj");
+const resend = new Resend("re_7m1m1FfU_CKsiPNWj8oSLcBW5Rftx1MhE");
 
 const generateToken = (user) => {
   return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
