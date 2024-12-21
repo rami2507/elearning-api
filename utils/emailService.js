@@ -1,22 +1,17 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  host: "sandbox.smtp.mailtrap.io",
-  port: 25,
-  secure: false,
+  host: "sandbox.smtp.mailtrap.io", // Mailtrap's SMTP server
+  port: 587, // Use 587 for STARTTLS
+  secure: false, // Use STARTTLS
   auth: {
-    user: "f7cdeca978835e",
-    pass: "94b906313698f8",
-    authMethod: "PLAIN",
+    user: "f7cdeca978835e", // Replace with your Mailtrap credentials
+    pass: "94b906313698f8", // Replace with your Mailtrap credentials
   },
   tls: {
-    // Ensure compatibility with various TLS versions
-    minVersion: "TLSv1.2", // Adjust this as needed (TLSv1.2 is commonly supported)
-    ciphers: "SSLv3",
     rejectUnauthorized: false, // Allows self-signed certificates (use with caution)
   },
 });
-
 const sendEmail = (to, subject, text) => {
   const mailOptions = {
     from: process.env.MAIL_USERNAME,
