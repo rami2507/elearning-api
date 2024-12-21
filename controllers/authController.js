@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const AppError = require("../utils/AppError");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
+const { promisify } = require("util");
 
 const generateToken = (user) => {
   return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -41,7 +42,6 @@ exports.signup = asyncHandler(async (req, res, next) => {
 });
 
 // Login user
-
 exports.login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -71,5 +71,38 @@ exports.login = asyncHandler(async (req, res, next) => {
     message: "Logged in successfuly!",
     token,
     data: { user },
+  });
+});
+
+// isAuthenticated
+exports.isAuthenticated = asyncHandler(async (req, res, next) => {
+  // 1) Getting Token And Check If It's There
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+  if (!token)
+    return next(
+      new AppError("Your are not logged in! Please login to get access", 401)
+    );
+  // 2) Validate token
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  // 3) Check If User Still Exist
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(
+      new AppError("the user belonging to this token does no longer exist")
+    );
+  }
+  // GRANT ACCESS TO PROTECTED ROUTE
+  res.status(200).json({
+    status: "success",
+    message: "You are authenticated!",
+    data: { user: currentUser },
   });
 });
