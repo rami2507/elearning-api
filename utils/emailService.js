@@ -1,26 +1,14 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
-const transporter = nodemailer.createTransport({
-  host: "sandbox.smtp.mailtrap.io", // Mailtrap's SMTP server
-  port: 587, // Use 587 for STARTTLS
-  secure: false, // Use STARTTLS
-  auth: {
-    user: "f7cdeca978835e", // Replace with your Mailtrap credentials
-    pass: "94b906313698f8", // Replace with your Mailtrap credentials
-  },
-  tls: {
-    rejectUnauthorized: false, // Allows self-signed certificates (use with caution)
-  },
-});
-const sendEmail = (to, subject, text) => {
-  const mailOptions = {
-    from: process.env.MAIL_USERNAME,
-    to,
+const resend = new Resend("re_E5gMjRAA_5CiYCRb7nxVBwuY8XRALc285");
+
+const sendEmail = (email, subject, letter) => {
+  resend.emails.send({
+    from: "noreply@jethings.com",
+    to: email,
     subject,
-    text,
-  };
-
-  return transporter.sendMail(mailOptions);
+    html: letter,
+  });
 };
 
 module.exports = sendEmail;
