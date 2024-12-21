@@ -87,6 +87,7 @@ exports.verifyEmail = asyncHandler(async (req, res, next) => {
     const token = generateToken(user);
 
     // Respond with success message and token
+    user.password = undefined;
     res.status(200).json({
       status: "success",
       message: "Email verified successfully",
