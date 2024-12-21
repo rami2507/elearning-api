@@ -43,18 +43,23 @@ exports.signup = asyncHandler(async (req, res, next) => {
     await user.save();
 
     // Send OTP email
-    const letter = `<p>Your OTP is ${otp}</p>`;
+    const letter = `<p>Your OTP to RESET your password is ${otp}</p>`;
     await sendEmail(email, "Your OTP", letter);
 
     // Respond with success message
-    res.status(200).json({ message: `OTP sent to ${email}` });
+    res
+      .status(200)
+      .json({ message: `Your RESET password OTP sent to ${email}` });
   } catch (err) {
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save({ validateBeforeSave: false });
     console.error("Failed to send OTP", err);
     return next(new AppError("Failed to send OTP", 500));
   }
 });
 
-// Verify OTP
+// Verify Email
 exports.verifyEmail = asyncHandler(async (req, res, next) => {
   const { otp, email } = req.body;
 
@@ -175,21 +180,57 @@ exports.isAuthenticated = asyncHandler(async (req, res, next) => {
   });
 });
 
-exports.forgotPassword = asyncHandler(async (req, res, nexy) => {
+exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
-  // Validate email
 
-  if (!email) {
-    return next(new AppError("Please provide an email", 400));
-  }
+  const user = await User.findOne({ email });
 
-  // Check if user exists
-  const user = await User.findOne({ email, emailVerified: true });
   if (!user) {
-    return next(new AppError("No user with this email found", 404));
+    return next(new AppError("There is no user with that email", 404));
   }
 
-  // Generate a reset token and expiry
-  const resetToken = await user.generateResetToken();
+  const otp = user.generateOtp();
+
+  try {
+    // Save the user if OTP is generated
+    await user.save();
+
+    // Send OTP email
+    const letter = `<p>Your OTP is ${otp}</p>`;
+    await sendEmail(email, "Your OTP", letter);
+
+    // Respond with success message
+    res.status(200).json({ message: `OTP sent to ${email}` });
+  } catch (err) {
+    user.passwordResetExpires = undefined;
+    user.passwordResetToken = undefined;
+    await user.save({ validateBeforeSave: false });
+    res.status(400).json({
+      status: "error",
+      err,
+    });
+  }
+});
+
+exports.resetPassword = asyncHandler(async (req, res, next) => {
+  const { email, otp, password, passwordConfirm } = req.body;
+  if (!otp || !password || !passwordConfirm) {
+    return next(new AppError("All fields are required", 400));
+  }
+  const user = await User.findOne({
+    email: email,
+    otp: otp,
+    otpExpiry: { $gt: Date.now() },
+  });
+  if (!user) {
+    return next(new AppError("Invalid OTP or OTP expired", 400));
+  }
+  if (password !== passwordConfirm) {
+    return next(new AppError("Passwords do not match", 400));
+  }
+  user.password = password;
+  user.otp = undefined;
+  user.otpExpiry = undefined;
   await user.save();
+  res.status(200).json({ message: "Password reset successful" });
 });
