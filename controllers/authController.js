@@ -36,7 +36,7 @@ exports.signup = asyncHandler(async (req, res, next) => {
   try {
     resend.emails.send({
       from: "onboarding@resend.dev",
-      to: email,
+      to: "testone99099@gmail.com",
       subject: "Your OTP",
       html: `<p>Your OTP is ${otp}</p>`,
     });
