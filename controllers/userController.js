@@ -46,3 +46,11 @@ exports.deleteUser = asyncHandler(async (req, res) => {
     message: "User deleted successfully",
   });
 });
+
+exports.deleteUsers = asyncHandler(async (req, res) => {
+  const users = await User.deleteMany();
+  res.status(200).json({
+    status: "success",
+    message: "All users deleted successfully",
+  });
+});

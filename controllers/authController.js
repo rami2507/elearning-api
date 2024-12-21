@@ -15,25 +15,39 @@ const generateToken = (user) => {
 exports.signup = asyncHandler(async (req, res, next) => {
   const { name, email, password } = req.body;
 
-  // Validate email and password
+  // Validate email, password, and name
   if (!email || !password || !name) {
     return next(new AppError("Please provide all required fields", 400));
   }
 
-  // Check if user already exists
-  const user = await User.findOne({ email, emailVerified: true });
-  if (user) {
+  // Check if the user already exists
+  let user = await User.findOne({ email });
+
+  if (user && user.emailVerified) {
     return next(new AppError("Email already exists", 400));
   }
 
-  // Create new user
-  const newUser = await User.create({ name, email, password });
-  const otp = newUser.generateOtp();
-  await newUser.save();
+  // Generate OTP and save the user or update
+  let otp;
+  if (user) {
+    // User exists, generate OTP
+    otp = user.generateOtp();
+  } else {
+    // Create new user and generate OTP
+    user = await User.create({ name, email, password });
+    otp = user.generateOtp();
+  }
+
   try {
+    // Save the user if OTP is generated
+    await user.save();
+
+    // Send OTP email
     const letter = `<p>Your OTP is ${otp}</p>`;
-    sendEmail(email, "Your OTP", letter);
-    res.status(200).json({ message: `OTP sent to  ${email}` });
+    await sendEmail(email, "Your OTP", letter);
+
+    // Respond with success message
+    res.status(200).json({ message: `OTP sent to ${email}` });
   } catch (err) {
     console.error("Failed to send OTP", err);
     return next(new AppError("Failed to send OTP", 500));
@@ -102,7 +116,6 @@ exports.login = asyncHandler(async (req, res, next) => {
     return next(new AppError("Invalid email or password", 401));
   }
 
-  console.log(user);
   if (!user.emailVerified) {
     return next(new AppError("Please verify your email to get access", 401));
   }

@@ -1,5 +1,4 @@
 const express = require("express");
-const dotenv = require("dotenv");
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
 const cookieParser = require("cookie-parser");
@@ -18,8 +17,6 @@ app.use(cors({ credentials: true, origin: allowedOrigins }));
 // Parsing Data
 app.use(express.json());
 app.use(cookieParser());
-
-dotenv.config({ path: ".env" });
 
 // Mounting Routes
 app.use("/api/v1/users", userRoutes);
