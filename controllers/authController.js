@@ -3,7 +3,10 @@ const AppError = require("../utils/AppError");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
-const sendEmail = require("../utils/emailService");
+// const sendEmail = require("../utils/emailService");
+const { Resend } = require("resend");
+
+const resend = new Resend("re_UwKwKuEF_QG8ZEpqnFGaNSgi7gtPG6uEj");
 
 const generateToken = (user) => {
   return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -30,12 +33,22 @@ exports.signup = asyncHandler(async (req, res, next) => {
   const newUser = await User.create({ name, email, password });
   const otp = newUser.generateOtp();
   await newUser.save();
+  try {
+    resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: email,
+      subject: "Your OTP",
+      html: `<p>Your OTP is ${otp}</p>`,
+    });
+    res.status(200).json({ message: "OTP sent to your email" });
+  } catch (err) {
+    console.error("Failed to send OTP", err);
+    return next(new AppError("Failed to send OTP", 500));
+  }
 
-  sendEmail(email, "Your OTP", `Your OTP is ${otp}`)
-    .then(() => console.log("Email sent successfully"))
-    .catch((err) => console.error("Failed to send email", err));
-
-  res.status(200).json({ message: "OTP sent to your email" });
+  // sendEmail(email, "Your OTP", `Your OTP is ${otp}`)
+  //   .then(() => console.log("Email sent successfully"))
+  //   .catch((err) => console.error("Failed to send email", err));
 });
 
 // Verify OTP
