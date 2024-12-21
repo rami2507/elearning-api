@@ -99,6 +99,8 @@ exports.isAuthenticated = asyncHandler(async (req, res, next) => {
       new AppError("the user belonging to this token does no longer exist")
     );
   }
+
+  currentUser.password = undefined;
   // GRANT ACCESS TO PROTECTED ROUTE
   res.status(200).json({
     status: "success",
