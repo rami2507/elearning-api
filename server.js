@@ -1,5 +1,6 @@
 const { default: mongoose } = require("mongoose");
 const app = require("./app");
+const User = require("./models/userModel");
 
 // Connecting to the DB
 const DB = process.env.DB_URI;
