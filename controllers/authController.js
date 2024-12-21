@@ -60,7 +60,9 @@ exports.login = asyncHandler(async (req, res, next) => {
   const token = generateToken(user);
 
   res.cookie("jwt", token, {
-    httpOnly: true,
+    httpOnly: true, // Prevent client-side access
+    secure: true, // Required for HTTPS
+    sameSite: "None",
   });
 
   user.password = undefined;

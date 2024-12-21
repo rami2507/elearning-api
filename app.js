@@ -9,7 +9,11 @@ const cors = require("cors");
 const app = express();
 
 // cors
-app.use(cors({ credentials: true, origin: process.env.CLIENT_URL }));
+const allowedOrigins = [
+  "http://localhost:3000", // Development URL
+  process.env.CLIENT_URL, // Production URL
+];
+app.use(cors({ credentials: true, origin: allowedOrigins }));
 
 // Parsing Data
 app.use(express.json());
