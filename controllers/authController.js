@@ -213,17 +213,15 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 });
 
 exports.resetPassword = asyncHandler(async (req, res, next) => {
-  const { email, otp, password, passwordConfirm } = req.body;
-  if (!otp || !password || !passwordConfirm) {
+  const { email, password, passwordConfirm } = req.body;
+  if (!email || !password || !passwordConfirm) {
     return next(new AppError("All fields are required", 400));
   }
   const user = await User.findOne({
-    email: email,
-    otp: otp,
-    otpExpiry: { $gt: Date.now() },
+    email,
   });
   if (!user) {
-    return next(new AppError("Invalid OTP or OTP expired", 400));
+    return next(new AppError("User not found with the email provided", 400));
   }
   if (password !== passwordConfirm) {
     return next(new AppError("Passwords do not match", 400));
